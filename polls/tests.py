@@ -35,7 +35,8 @@ class QuestionModelTests(TestCase):
         """
         time = timezone.now() - datetime.timedelta(hours=23, minutes=59, seconds=59)
         recent_question = Question(pub_date=time)
-        self.assertIs(recent_question.was_published_recently(), True)   
+        self.assertIs(recent_question.was_published_recently(), True) 
+
 
 
 def createquestion(question_text,days):
@@ -61,6 +62,7 @@ class QuestionIndexViewTests(TestCase):
     
     def test_past_questions(self):
         question = createquestion("Past Question",days=-30)
+        question.choice_set.create(choice_text="Test", votes=0)
         response = self.client.get(reverse("polls:index"))
         self.assertQuerySetEqual(
             response.context['latest_question_list'],
@@ -83,6 +85,7 @@ class QuestionIndexViewTests(TestCase):
         are displayed.
         """
         question = createquestion(question_text="Past question.", days=-30)
+        question.choice_set.create(choice_text="Test", votes=0)
         createquestion(question_text="Future question.", days=30)
         response = self.client.get(reverse("polls:index"))
         self.assertQuerySetEqual(
@@ -95,7 +98,9 @@ class QuestionIndexViewTests(TestCase):
         The questions index page may display multiple questions.
         """
         question1 = createquestion(question_text="Past question 1.", days=-30)
+        question1.choice_set.create(choice_text="Test", votes=0)
         question2 = createquestion(question_text="Past question 2.", days=-5)
+        question2.choice_set.create(choice_text="Test", votes=0)
         response = self.client.get(reverse("polls:index"))
         self.assertQuerySetEqual(
             response.context["latest_question_list"],
@@ -105,6 +110,7 @@ class QuestionIndexViewTests(TestCase):
 class QuestionDetailViewTests(TestCase):
     def test_future_question(self):
         future_question = createquestion(question_text="Future question.", days=5)
+        future_question.choice_set.create(choice_text="Test",votes=0)
         url = reverse("polls:detail", args=(future_question.id,))
         response = self.client.get(url)
         self.assertEqual(response.status_code, 404)
@@ -114,6 +120,8 @@ class QuestionDetailViewTests(TestCase):
         displays the question's text.
         """
         past_question = createquestion(question_text="Past Question.", days=-5)
+        past_question.choice_set.create(choice_text="Test",votes=0)
         url = reverse("polls:detail", args=(past_question.id,))
         response = self.client.get(url)
         self.assertContains(response, past_question.question_text)
+
